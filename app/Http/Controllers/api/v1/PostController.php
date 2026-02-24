@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Http\Controllers\api\v1;
-
+use App\Models\Post;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StorePostRequest;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
@@ -12,55 +13,42 @@ class PostController extends Controller
      */
     public function index()
     {
-        return [
-            [
-                "id" => 1,
-                "title" => "Post Title 1",
-                "content" => "Post Content 1"
-            ],
-            [
-                "id" => 2,
-                "title" => "Post Title 2",
-                "content" => "Post Content 2"
-            ],
-            [
-                "id" => 3,
-                "title" => "Post Title 3",
-                "content" => "Post Content 3"
-            ]
-        ];
+        return Post::all();
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StorePostRequest $request)
     {
-
         // $data = $request->all();
         // $data = $request->only(['title', 'body']);
         // return $data;
 
-        return response()->json(
-            [
-                "message" => "Post created successfully",
-                "data" => [
-                    "id" => 12,
-                    "title" => $request->title,
-                    "content" => $request->body
-                ]
-            ]
-        )
-        ->header("Content-Type", "application/json")
-        ->setStatusCode(201)
-        ;
+        $post = $request->validated();
+
+        $post['author_id'] = 1; // hardcoded author_id for testing
+
+        // Save
+        Post::create($post);
+        return response()->json($post, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    // show(Post $post) => route model binding, automatically find the post by id and inject it into the method
+    public function show(Post $post)
     {
+
+        // $post = Post::findOrFail($id);
+
+        return response()->json([
+            "message" => "Post retrieved successfully",
+            "data" => $post
+            ], 200
+        );
+
         // return [
         //     "message" => "test",
         //     "data" => [
@@ -70,24 +58,24 @@ class PostController extends Controller
         //     ]
         // ];
 
-        return response()->json([
-            "message" => "test",
-            "data" => [
-                "id" => $id,
-                "title" => "Post Title",
-                "content" => "Post Content"
-            ]
-        ])
-        ->header('Test-Header', 'TestValue') // header for additional information in response
-        ->header('Content-Type', 'application/json') // set content type to json
-        ->setStatusCode(200) // set status code to 200 OK
-        ; 
+        // return response()->json([
+        //     "message" => "test",
+        //     "data" => [
+        //         "id" => $id,
+        //         "title" => "Post Title",
+        //         "content" => "Post Content"
+        //     ]
+        // ])
+        // ->header('Test-Header', 'TestValue') // header for additional information in response
+        // ->header('Content-Type', 'application/json') // set content type to json
+        // ->setStatusCode(200) // set status code to 200 OK
+        // ; 
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Post $post)
     {
         $data = $request->validate([
             "title" => "required|string|max:255",
@@ -95,8 +83,8 @@ class PostController extends Controller
         ]);
 
         // $data = $request->all();
-
-        return $data;
+        $post->update($data);
+        return $post;
     }
 
     /**

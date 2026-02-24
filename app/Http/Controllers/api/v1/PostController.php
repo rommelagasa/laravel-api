@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api\v1;
 use App\Models\Post;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePostRequest;
+use App\Http\Resources\PostResource;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
@@ -13,7 +14,10 @@ class PostController extends Controller
      */
     public function index()
     {
-        return Post::all();
+        return PostResource::collection
+                (Post::with('author')
+                // ->get()
+                ->paginate(2)); // eager load author relationship to avoid N+1 problem, wrap in PostResource collection to transform the data
     }
 
     /**
@@ -30,8 +34,8 @@ class PostController extends Controller
         $post['author_id'] = 1; // hardcoded author_id for testing
 
         // Save
-        Post::create($post);
-        return response()->json($post, 201);
+        $post = Post::create($post);
+        return response()->json(new PostResource($post), 201);
     }
 
     /**
@@ -45,7 +49,7 @@ class PostController extends Controller
 
         return response()->json([
             "message" => "Post retrieved successfully",
-            "data" => $post
+            "data" => new PostResource($post)
             ], 200
         );
 
@@ -84,7 +88,7 @@ class PostController extends Controller
 
         // $data = $request->all();
         $post->update($data);
-        return $post;
+        return response()->json(new PostResource($post), 200);
     }
 
     /**
